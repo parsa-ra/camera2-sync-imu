@@ -605,7 +605,8 @@ public class Camera2VideoFragment extends Fragment
 
     private String getVideoFilePath2(){
         final File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) ;
-        return (dir == null ? "" : (dir.getAbsolutePath()+ "/" + storageUtil.Folder_Name))  + System.currentTimeMillis() + ".mp4";
+        return (dir == null ? "" : (dir.getAbsolutePath()+ "/" + storageUtil.Folder_Name + '/'))
+                + storageUtil.Folder_Name + System.currentTimeMillis() + ".mp4";
     }
 
     private void startRecordingVideo() {
