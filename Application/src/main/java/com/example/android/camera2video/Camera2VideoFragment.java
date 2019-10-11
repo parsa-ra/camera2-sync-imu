@@ -42,6 +42,7 @@ import android.widget.Toast;
 
 
 import java.io.File;
+import java.io.PrintWriter ;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -58,11 +59,19 @@ public class Camera2VideoFragment extends Fragment
     private static final SparseIntArray DEFAULT_ORIENTATIONS = new SparseIntArray();
     private static final SparseIntArray INVERSE_ORIENTATIONS = new SparseIntArray();
 
+    /* IMU sensors handler */
+    private IMUHandling imuHandler ;
+    /* Current prefix of video files used to correspond between video file and data files */
+    private String currPrefix ;
+
     private static final String TAG = "Camera2VideoFragment";
     private static final int REQUEST_VIDEO_PERMISSIONS = 1;
     private static final String FRAGMENT_DIALOG = "dialog";
 
     private static final String[] VIDEO_PERMISSIONS = {
+            // Permissions
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.CAMERA,
             Manifest.permission.RECORD_AUDIO,
     };
@@ -199,6 +208,7 @@ public class Camera2VideoFragment extends Fragment
                 activity.finish();
             }
         }
+
 
     };
     private Integer mSensorOrientation;
@@ -410,6 +420,9 @@ public class Camera2VideoFragment extends Fragment
         if (null == activity || activity.isFinishing()) {
             return;
         }
+
+        this.imuHandler = new IMUHandling(activity) ;
+
         CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
         try {
             Log.d(TAG, "tryAcquire");
@@ -603,17 +616,29 @@ public class Camera2VideoFragment extends Fragment
                 + System.currentTimeMillis() + ".mp4";
     }
 
-    private String getVideoFilePath2(){
+
+    // Make sure that getDataStoragePath calls after getVideFilePath2
+    private String getDataStoragePath(String type, String prefix){
         final File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) ;
-        return (dir == null ? "" : (dir.getAbsolutePath()+ "/" + storageUtil.Folder_Name + '/'))
-                + storageUtil.Folder_Name + System.currentTimeMillis() + ".mp4";
+        return (dir == null ? "" : (dir.getAbsolutePath() + "/" + storageUtil.Folder_Name + "/")
+            + storageUtil.Folder_Name + prefix + "_" + type + ".txt" );
+    }
+
+    private String getVideoFilePath2(){
+        this.currPrefix = Long.toString(System.currentTimeMillis()) ;
+        final File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) ;
+        return (dir == null ? "" : (dir.getAbsolutePath()+ "/" + storageUtil.Folder_Name + '/')
+                + storageUtil.Folder_Name + this.currPrefix + ".mp4") ;
     }
 
     private void startRecordingVideo() {
         if (null == mCameraDevice || !mTextureView.isAvailable() || null == mPreviewSize) {
             return;
         }
+
         try {
+            // Register IMU Listeners
+            this.imuHandler.regSensors() ;
             closePreviewSession();
             setUpMediaRecorder();
             SurfaceTexture texture = mTextureView.getSurfaceTexture();
@@ -675,6 +700,9 @@ public class Camera2VideoFragment extends Fragment
     }
 
     private void stopRecordingVideo() {
+        // unregistering IMU Listeners
+        this.imuHandler.unRegSensors() ;
+
         // UI
         mIsRecordingVideo = false;
         mButtonVideo.setText(R.string.record);
@@ -688,6 +716,21 @@ public class Camera2VideoFragment extends Fragment
                     Toast.LENGTH_SHORT).show();
             Log.d(TAG, "Video saved: " + mNextVideoAbsolutePath);
         }
+
+        // Writing time and imu data to filesystem.
+        try{
+            File fileGyroTimeStamp = new File(getDataStoragePath("GyroTimeStamp", this.currPrefix)) ;
+            PrintWriter gyroTimeOut = new PrintWriter(fileGyroTimeStamp) ;
+            for(int i=0; i<imuHandler.timeStampGyro.size(); i++){
+                gyroTimeOut.println(imuHandler.timeStampGyro.get(i)) ;
+            }
+            gyroTimeOut.close() ;
+
+        }catch(IOException e){
+            e.printStackTrace();
+        }
+
+
         mNextVideoAbsolutePath = null;
         startPreview();
     }
@@ -777,10 +820,6 @@ public class Camera2VideoFragment extends Fragment
                 int[] CamCap = CamChar.get(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES) ;
 
                 // CamCap.contains(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_LOGICAL_MULTI_CAMERA) ;
-
-
-
-
             }
 
         } catch (CameraAccessException e) {

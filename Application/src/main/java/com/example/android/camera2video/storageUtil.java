@@ -10,8 +10,8 @@ public class storageUtil {
     public static final String Folder_Name = "ParaCamera";
     public boolean Folder_Created = false;
     private static final String TAG = "ParaCamera_Storage";
+    // Later user can change this default directory.
     public String User_path;
-
 
     // method for creating program directory
     public void makeDir(){

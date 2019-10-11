@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "C:\\Users\\Parano\\Documents\\GitHub\\camera2-sync-imu\\Application\\build\\intermediates\\incremental\\mergeDebugResources\\merged.dir\\values-port\\values-port.xml",
+            "outputFile": "C:\\Users\\Administrator\\github\\camera2-sync-imu\\Application\\build\\intermediates\\incremental\\mergeDebugResources\\merged.dir\\values-port\\values-port.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\Parano\\.gradle\\caches\\transforms-2\\files-2.1\\18362b74892766791c9c6d769b2d5991\\res\\values-port\\values-port.xml",
+                    "source": "C:\\Users\\Administrator\\.gradle\\caches\\transforms-2\\files-2.1\\ba9d2126f2cf22083ed99056efd73715\\res\\values-port\\values-port.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",
