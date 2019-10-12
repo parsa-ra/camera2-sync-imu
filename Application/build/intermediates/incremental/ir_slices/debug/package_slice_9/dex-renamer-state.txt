@@ -1,4 +1,0 @@
-#Wed Oct 09 21:03:58 IRST 2019
-base.0=C\:\\Users\\Administrator\\github\\camera2-sync-imu\\Application\\build\\intermediates\\transforms\\dexMerger\\debug\\9
-path.0=classes.dex
-renamed.0=classes.dex

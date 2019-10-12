@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Vector;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -616,12 +617,18 @@ public class Camera2VideoFragment extends Fragment
                 + System.currentTimeMillis() + ".mp4";
     }
 
+    private String getDataStorageFolderPath(String prefix){
+        final File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) ;
+        return (dir == null ? "" : (dir.getAbsolutePath() + "/" + storageUtil.Folder_Name + "/")
+                + storageUtil.Folder_Name + prefix);
+    }
 
-    // Make sure that getDataStoragePath calls after getVideFilePath2
+
+    // Make sure that getDataStoragePath calls after getVidFilePath2
     private String getDataStoragePath(String type, String prefix){
         final File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) ;
         return (dir == null ? "" : (dir.getAbsolutePath() + "/" + storageUtil.Folder_Name + "/")
-            + storageUtil.Folder_Name + prefix + "_" + type + ".txt" );
+            + storageUtil.Folder_Name +  prefix + "/" + type + ".txt" );
     }
 
     private String getVideoFilePath2(){
@@ -639,6 +646,7 @@ public class Camera2VideoFragment extends Fragment
         try {
             // Register IMU Listeners
             this.imuHandler.regSensors() ;
+
             closePreviewSession();
             setUpMediaRecorder();
             SurfaceTexture texture = mTextureView.getSurfaceTexture();
@@ -699,6 +707,18 @@ public class Camera2VideoFragment extends Fragment
         }
     }
 
+    private void printToFile(File toPrintFile, Vector<Long> dataToPrint){
+        try {
+            PrintWriter printWriter = new PrintWriter(toPrintFile);
+            for (int i = 0; i < dataToPrint.size(); i++) {
+                printWriter.println(dataToPrint.get(i));
+            }
+            printWriter.close();
+        }catch(IOException e){
+            e.printStackTrace();
+        }
+    }
+
     private void stopRecordingVideo() {
         // unregistering IMU Listeners
         this.imuHandler.unRegSensors() ;
@@ -718,15 +738,22 @@ public class Camera2VideoFragment extends Fragment
         }
 
         // Writing time and imu data to filesystem.
+        // Creating new folder
         try{
-            File fileGyroTimeStamp = new File(getDataStoragePath("GyroTimeStamp", this.currPrefix)) ;
-            PrintWriter gyroTimeOut = new PrintWriter(fileGyroTimeStamp) ;
-            for(int i=0; i<imuHandler.timeStampGyro.size(); i++){
-                gyroTimeOut.println(imuHandler.timeStampGyro.get(i)) ;
-            }
-            gyroTimeOut.close() ;
+            File dataFile = new File(getDataStorageFolderPath(this.currPrefix)) ;
+            if(dataFile.mkdir()) {
+                File fileGyroTimeStamp = new File(getDataStoragePath("GyroTimeStamp", this.currPrefix));
+                File fileAccTimeStamp = new File(getDataStoragePath("AccTimeStamp", this.currPrefix)) ;
 
-        }catch(IOException e){
+                printToFile(fileGyroTimeStamp, imuHandler.timeStampGyro) ;
+                printToFile(fileAccTimeStamp, imuHandler.timeStampAcc) ;
+
+
+            }else{
+                Toast.makeText(activity, "Can't create subfolder for Data", Toast.LENGTH_SHORT).show() ;
+            }
+
+        }catch(SecurityException e){
             e.printStackTrace();
         }
 

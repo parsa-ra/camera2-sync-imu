@@ -1,5 +1,5 @@
-.gradle
-.google
-.idea
-Application/build
-gradle
+.gradle/
+.google/
+.idea/
+Application/build/
+gradle/

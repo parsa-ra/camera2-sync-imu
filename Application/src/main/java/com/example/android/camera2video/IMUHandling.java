@@ -19,7 +19,7 @@ public class IMUHandling implements SensorEventListener {
     private double MaxGyroRate;
     private double MaxAccRate;
     // Current TimeStamp in Millis
-    public Long CurrTime ;
+    public Long currTime = SystemClock.elapsedRealtimeNanos();
 
     // Gyro TimeStamp and Data
     public Vector<Long> timeStampGyro = new Vector<Long>() ;
@@ -72,15 +72,13 @@ public class IMUHandling implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        // This is very important that time grabbed first.
-        this.CurrTime = SystemClock.elapsedRealtimeNanos() ;
         if(event.sensor.getType() == Sensor.TYPE_GYROSCOPE){
-            timeStampGyro.add(this.CurrTime) ;
+            timeStampGyro.add(event.timestamp - this.currTime) ;
             float[] data = {event.values[0], event.values[1], event.values[2]} ;
             gyroData.add(data) ;
 
         }else if(event.sensor.getType() == Sensor.TYPE_ACCELEROMETER){
-            timeStampAcc.add(this.CurrTime) ;
+            timeStampAcc.add(event.timestamp - this.currTime) ;
             float[] data = {event.values[0], event.values[1], event.values[2]} ;
             accData.add(data) ;
         }
@@ -88,6 +86,8 @@ public class IMUHandling implements SensorEventListener {
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy){
+
+        Log.i(TAG, String.format("Accuracy changed to %d", accuracy)) ;
 
     }
 
